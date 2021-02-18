@@ -1,0 +1,9 @@
+[submodule "amiga-gcc"]
+	path = amiga-gcc
+	url = https://github.com/bebbo/amiga-gcc.git
+[submodule "ACE"]
+	path = ACE
+	url = https://github.com/AmigaPorts/ACE.git
+[submodule "AmigaCMakeCrossToolchains"]
+	path = AmigaCMakeCrossToolchains
+	url = https://github.com/AmigaPorts/AmigaCMakeCrossToolchains.git
