@@ -1,0 +1,12 @@
+[fs-uae]
+chip_memory = 512
+slow_memory = 512
+cpu = 68000
+kickstart_file = $CONFIG/amiga-os-130.rom
+floppy_drive_0 = $CONFIG/amiga-os-134-workbench.adf
+hard_drive_0_label = hdd
+hard_drive_0 = $CONFIG
+relative_paths = 1
+console_debugger = 1
+initial_input_grab = 0
+warp_mode = 1
