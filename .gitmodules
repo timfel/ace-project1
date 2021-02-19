@@ -3,7 +3,10 @@
 	url = https://github.com/bebbo/amiga-gcc.git
 [submodule "ACE"]
 	path = ACE
-	url = https://github.com/AmigaPorts/ACE.git
+	url = https://github.com/timfel/ACE.git
 [submodule "AmigaCMakeCrossToolchains"]
 	path = AmigaCMakeCrossToolchains
 	url = https://github.com/AmigaPorts/AmigaCMakeCrossToolchains.git
+[submodule "rgb2amiga"]
+	path = rgb2amiga
+	url = https://github.com/timfel/rgb2amiga
