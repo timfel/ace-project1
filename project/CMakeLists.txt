@@ -3,10 +3,10 @@ project(hello)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-       error("Point CMAKE_TOOLCHAIN_FILE to the AmigaCMakeCrossToolchains/m68k-amigaos.cmake file")
+       message(FATAL_ERROR "Point CMAKE_TOOLCHAIN_FILE to the AmigaCMakeCrossToolchains/m68k-amigaos.cmake file")
 endif()
 if(NOT DEFINED TOOLCHAIN_PATH)
-       error("Point TOOLCHAIN_PATH to the 'prefix' directory that includes the cross root")
+       message(FATAL_ERROR "Point TOOLCHAIN_PATH to the 'prefix' directory that includes the cross root")
 endif()
 
 set(TOOLCHAIN_PREFIX "m68k-amigaos")
@@ -17,7 +17,7 @@ set(M68K_FPU "soft")
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 
 if(NOT AMIGA)
-	message(SEND_ERROR "This project only compiles for Amiga")
+        message(SEND_ERROR "This project only compiles for Amiga")
 endif()
 
 set(CMAKE_C_STANDARD 11)
@@ -27,7 +27,7 @@ file(GLOB_RECURSE SOURCES src/*.c)
 file(GLOB_RECURSE HEADERS src/*.h)
 
 include_directories(
-	${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/src
 )
 
 if(GAME_DEBUG)
@@ -54,3 +54,14 @@ set(TARGET_NAME ${PROJECT_NAME_LOWER})
 add_executable(${TARGET_NAME} ${SOURCES} ${HEADERS})
 target_link_libraries(${TARGET_NAME} ${LIBS})
 
+## resources
+if(NOT DEFINED WAR1GUS_DATA)
+       message(FATAL_ERROR "Point WAR1GUS_DATA to the data directory of war1gus")
+endif()
+
+add_custom_command(TARGET "${TARGET_NAME}"
+                   POST_BUILD
+                   COMMAND python3
+                   ARGS convert_images.py --data ${WAR1GUS_DATA} --output resources --prefix ${TOOLCHAIN_PATH}
+                   COMMENT "Converting resources"
+                   VERBATIM)
