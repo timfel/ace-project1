@@ -1,9 +1,11 @@
 #include "game.h"
+#include <ace/managers/copper.h>
 #include <ace/managers/log.h>
 #include <ace/managers/mouse.h>
 #include <ace/types.h>
 #include <ace/managers/viewport/camera.h>
 #include <ace/utils/bitmap.h>
+#include <ace/utils/custom.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
 #include <ace/managers/key.h>
@@ -13,6 +15,7 @@
 #include <ace/managers/viewport/scrollbuffer.h>
 #include <ace/managers/viewport/tilebuffer.h>
 #include <ace/managers/blit.h>
+#include <stdint.h>
 
 
 #define TILE_SHIFT 4
@@ -28,6 +31,15 @@ static tTileBufferManager *s_pMapBuffer;
 static tCameraManager *s_pMainCamera;
 static tBitMap *s_pMapBitmap;
 
+// palette switching
+static uint16_t s_pMapPalette[32];
+static uint16_t s_pPanelPalette[32];
+static tCopBlock *s_pPaletteBlocks[2];
+
+#define MAP_HEIGHT 200
+#define PANEL_HEIGHT 48
+
+
 /*
  * void myTileDrawCallback(UWORD uwTileX, UWORD uwTileY,
  *                         tBitMap *pBitMap, UWORD uwBitMapX, UWORD uwBitMapY) {
@@ -39,25 +51,29 @@ void gameGsCreate(void) {
     logWrite("load view 0\n");
     viewLoad(0);
     logWrite("system use\n");
-    systemUse();
 
     logWrite("Create view\n");
     s_pView = viewCreate(0,
-                         TAG_VIEW_GLOBAL_CLUT, 1,
+                         // TAG_VIEW_GLOBAL_CLUT, 1,
+                         TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_BLOCK,
                          TAG_DONE);
 
     logWrite("Create map\n");
-    // create map area
+
+    // create map area    
+    paletteLoad("resources/dungeon_tileset.plt", s_pMapPalette, 32);
+    s_pPaletteBlocks[0] = copBlockCreate(s_pView->pCopList, 32, 0, 0);
+    for (uint8_t i = 0; i < 32; i++) {
+        copMove(s_pView->pCopList, s_pPaletteBlocks[0], &g_pCustom->color[i], s_pMapPalette[i]);
+    }
+
     s_pVpMain = vPortCreate(0,
                             TAG_VPORT_VIEW, s_pView,
                             TAG_VPORT_BPP, 5,
-                            TAG_VPORT_HEIGHT, 256 - 48,
-                            TAG_END);
-    logWrite("Load map palette\n");
-    paletteLoad("resources/forest_tileset.plt", s_pVpMain->pPalette, 32);
-    
-    logWrite("Load map terrain\n");
-    s_pMapBitmap = bitmapCreateFromFile("resources/graphics/tilesets/forest/terrain.bm", 0);
+                            TAG_VPORT_HEIGHT, MAP_HEIGHT,
+                            TAG_END);    
+    s_pMapBitmap = bitmapCreateFromFile("resources/graphics/tilesets/dungeon/terrain.bm", 0);
+    paletteLoad("resources/dungeon_tileset.plt", s_pVpMain->pPalette, 32);
     logWrite("Create tilebuffer\n");
     s_pMapBuffer = tileBufferCreate(0,
                                     TAG_TILEBUFFER_VPORT, s_pVpMain,
@@ -66,8 +82,7 @@ void gameGsCreate(void) {
                                     TAG_TILEBUFFER_BOUND_TILE_Y, MAP_SIZE,
                                     TAG_TILEBUFFER_TILE_SHIFT, TILE_SHIFT,
                                     TAG_TILEBUFFER_TILESET, s_pMapBitmap,
-                                    TAG_TILEBUFFER_REDRAW_QUEUE_LENGTH, 20,
-                                    // 16px, 320px wide -> redraw when an entire new line is visible
+                                    TAG_TILEBUFFER_REDRAW_QUEUE_LENGTH, 9,
                                     TAG_END);
     s_pMainCamera = s_pMapBuffer->pCamera;
     logWrite("set camera coords\n");
@@ -85,17 +100,23 @@ void gameGsCreate(void) {
     tileBufferRedrawAll(s_pMapBuffer);
 
     // create panel area
-    logWrite("create panel area\n");
+    paletteLoad("resources/human_panel.plt", s_pPanelPalette, 32);
+    s_pPaletteBlocks[1] = copBlockCreate(s_pView->pCopList, 32, 0, s_pVpMain->uwHeight + s_pVpMain->uwOffsY);
+    for (uint8_t i = 0; i < 32; i++) {
+        copMove(s_pView->pCopList, s_pPaletteBlocks[1], &g_pCustom->color[i], s_pPanelPalette[i]);
+    }
+    
     s_pVpPanel = vPortCreate(0,
                              TAG_VPORT_VIEW, s_pView,
                              TAG_VPORT_BPP, 5,
+                             // TAG_VPORT_OFFSET_TOP, 1,
+                             TAG_VPORT_HEIGHT, PANEL_HEIGHT,
                              TAG_END);
     logWrite("create panel buffer\n");
     s_pPanelBuffer = simpleBufferCreate(0,
                                         TAG_SIMPLEBUFFER_VPORT, s_pVpPanel,
                                         TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
                                         TAG_END);
-    paletteLoad("resources/human_panel.plt", s_pVpPanel->pPalette, 32);
     bitmapLoadFromFile(s_pPanelBuffer->pFront, "resources/graphics/ui/human/panel_2.bm", 0, 0);
 
     // finish up
