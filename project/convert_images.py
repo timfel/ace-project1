@@ -1,5 +1,8 @@
 import glob
+import math
 import os
+import re
+import subprocess
 
 TILE_SIZE = 16
 
@@ -58,13 +61,23 @@ DATA = {
 }
 
 def system(s):
-    os.system(s)
+    code = os.system(s)
+    if code != 0:
+        import pdb; pdb.set_trace()
+    return
 
 def main(data, out, bindir):
     rgb2amiga = os.path.join(bindir, 'bin', 'Rgb2Amiga')
     bitmap_conv = os.path.join(bindir, 'bin', 'bitmap_conv')
     tileset_conv = os.path.join(bindir, 'bin', 'tileset_conv')
     palette_conv = os.path.join(bindir, 'bin', 'palette_conv')
+    w_h_re = re.compile(r"PNG image data, (\d+) x (\d+),")
+    transparency = '"#BBBBBB"'
+
+    if not data.endswith(os.path.sep):
+        data += os.path.sep
+    if not out.endswith(os.path.sep):
+        out += os.path.sep
 
     for name,set in DATA.items():
         inputfiles = []
@@ -84,8 +97,21 @@ def main(data, out, bindir):
         palette = os.path.join(out, f"{name.lower()}.plt")
         system(f"{palette_conv} {pngfiles[0]}.gpl {palette}")
         for bmfile,pngfile in zip(bmfiles, pngfiles):
-            # TODO: mask color is #BBB (i.e., 187 187 187)
-            system(f"{bitmap_conv} {palette} {pngfile} -o {bmfile}")
+            # TODO: mask color is transparency
+            info = subprocess.check_output(f"file {pngfile}.png", shell=True).decode()
+            w, h = (int(x) for x in w_h_re.search(info).groups())
+            if w % 16:
+                if w > 16:
+                    crop_left = math.floor((w % 16) / 2)
+                    crop_right = math.ceil((w % 16) / 2)
+                    system(f"convert {pngfile}.png -gravity East -crop {w - crop_left}x{h}+0+0 +repage {pngfile}.png")
+                    system(f"convert {pngfile}.png -gravity West -crop {w - crop_left - crop_right}x{h}+0+0 +repage {pngfile}.png")
+                else:
+                    add_left = math.floor((16 - w) / 2)
+                    add_right = math.ceil((16 - w) / 2)
+                    system(f"convert {pngfile}.png -gravity East -background {transparency} -splice {add_left}x0 +repage {pngfile}.png")
+                    system(f"convert {pngfile}.png -gravity West -background {transparency} -splice {add_right}x0 +repage {pngfile}.png")
+            system(f"{bitmap_conv} {palette} {pngfile}.png -o {bmfile}")
         if name.endswith("_TILESET"):
             system(f"{tileset_conv} {pngfiles[0]}.png {TILE_SIZE} {bmfiles[0]} -plt {palette}")
 
