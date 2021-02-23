@@ -32,6 +32,8 @@ static tTileBufferManager *s_pMapBuffer;
 static tCameraManager *s_pMainCamera;
 static tBitMap *s_pMapBitmap;
 
+static tBitMap *s_pGoldMineBitmap;
+
 // palette switching
 static uint16_t s_pMapPalette[32];
 static uint16_t s_pPanelPalette[32];
@@ -60,6 +62,8 @@ void gameGsCreate(void) {
 
     logWrite("Create map\n");
 
+    s_pGoldMineBitmap = bitmapCreateFromFile("resources/graphics/tilesets/forest/neutral/buildings/gold_mine.bm", 0);
+
     // create map area
     paletteLoad("resources/forest_tileset.plt", s_pMapPalette, 32);
     s_pPaletteBlocks[0] = copBlockCreate(s_pView->pCopList, 32, 0, 0);
@@ -73,7 +77,6 @@ void gameGsCreate(void) {
                             TAG_VPORT_HEIGHT, MAP_HEIGHT,
                             TAG_END);    
     s_pMapBitmap = bitmapCreateFromFile("resources/graphics/tilesets/forest/terrain.bm", 0);
-    paletteLoad("resources/forest_tileset.plt", s_pVpMain->pPalette, 32);
     logWrite("Create tilebuffer\n");
     s_pMapBuffer = tileBufferCreate(0,
                                     TAG_TILEBUFFER_VPORT, s_pVpMain,
@@ -144,6 +147,10 @@ void gameGsLoop(void) {
     }
     if (keyCheck(KEY_C)) {
         copDumpBlocks();
+    }
+
+    if (keyCheck(KEY_U)) {
+        blitUnsafeCopyAligned(s_pGoldMineBitmap, 0, 0, s_pMapBuffer->pScroll->pBack, 128, 80, 64, 64);
     }
 
     if (mouseGetX(MOUSE_PORT_1) > s_pVpMain->uwWidth - 5) {
