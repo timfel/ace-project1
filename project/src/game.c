@@ -7,6 +7,7 @@
 #include <ace/utils/bitmap.h>
 #include <ace/utils/custom.h>
 #include <ace/utils/extview.h>
+#include <ace/utils/file.h>
 #include <ace/utils/palette.h>
 #include <ace/managers/key.h>
 #include <ace/managers/game.h>
@@ -39,7 +40,6 @@ static tCopBlock *s_pPaletteBlocks[2];
 #define MAP_HEIGHT 200
 #define PANEL_HEIGHT 48
 
-
 /*
  * void myTileDrawCallback(UWORD uwTileX, UWORD uwTileY,
  *                         tBitMap *pBitMap, UWORD uwBitMapX, UWORD uwBitMapY) {
@@ -60,8 +60,8 @@ void gameGsCreate(void) {
 
     logWrite("Create map\n");
 
-    // create map area    
-    paletteLoad("resources/dungeon_tileset.plt", s_pMapPalette, 32);
+    // create map area
+    paletteLoad("resources/forest_tileset.plt", s_pMapPalette, 32);
     s_pPaletteBlocks[0] = copBlockCreate(s_pView->pCopList, 32, 0, 0);
     for (uint8_t i = 0; i < 32; i++) {
         copMove(s_pView->pCopList, s_pPaletteBlocks[0], &g_pCustom->color[i], s_pMapPalette[i]);
@@ -72,8 +72,8 @@ void gameGsCreate(void) {
                             TAG_VPORT_BPP, 5,
                             TAG_VPORT_HEIGHT, MAP_HEIGHT,
                             TAG_END);    
-    s_pMapBitmap = bitmapCreateFromFile("resources/graphics/tilesets/dungeon/terrain.bm", 0);
-    paletteLoad("resources/dungeon_tileset.plt", s_pVpMain->pPalette, 32);
+    s_pMapBitmap = bitmapCreateFromFile("resources/graphics/tilesets/forest/terrain.bm", 0);
+    paletteLoad("resources/forest_tileset.plt", s_pVpMain->pPalette, 32);
     logWrite("Create tilebuffer\n");
     s_pMapBuffer = tileBufferCreate(0,
                                     TAG_TILEBUFFER_VPORT, s_pVpMain,
@@ -89,19 +89,18 @@ void gameGsCreate(void) {
     cameraSetCoord(s_pMainCamera, 0, 0);
 
     logWrite("file tile data\n");
+    tFile *map = fileOpen("resources/human01.map", "r");
     for (int x = 0; x < MAP_SIZE; x++) {
-        logWrite("file tile data: line %d\n", x);
-        for (int y = 0; y < MAP_SIZE; y++) {
-            s_pMapBuffer->pTileData[x][y] = (0x90 + x);
-        }
+        fileRead(map, s_pMapBuffer->pTileData[x], MAP_SIZE);
     }
+    fileClose(map);
 
     logWrite("redraw all\n");
     tileBufferRedrawAll(s_pMapBuffer);
 
     // create panel area
     paletteLoad("resources/human_panel.plt", s_pPanelPalette, 32);
-    s_pPaletteBlocks[1] = copBlockCreate(s_pView->pCopList, 32, 0, s_pVpMain->uwHeight + s_pVpMain->uwOffsY);
+    s_pPaletteBlocks[1] = copBlockCreate(s_pView->pCopList, 32, 0, MAP_HEIGHT + 45);
     for (uint8_t i = 0; i < 32; i++) {
         copMove(s_pView->pCopList, s_pPaletteBlocks[1], &g_pCustom->color[i], s_pPanelPalette[i]);
     }
@@ -117,7 +116,7 @@ void gameGsCreate(void) {
                                         TAG_SIMPLEBUFFER_VPORT, s_pVpPanel,
                                         TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
                                         TAG_END);
-    bitmapLoadFromFile(s_pPanelBuffer->pFront, "resources/graphics/ui/human/panel_2.bm", 0, 0);
+    bitmapLoadFromFile(s_pPanelBuffer->pFront, "resources/graphics/ui/human/panel_2.bm", 48, 0);
 
     // finish up
     logWrite("load view\n");
@@ -142,6 +141,9 @@ void gameGsLoop(void) {
     }
     if (keyCheck(KEY_ESCAPE)) {
         gameExit();
+    }
+    if (keyCheck(KEY_C)) {
+        copDumpBlocks();
     }
 
     if (mouseGetX(MOUSE_PORT_1) > s_pVpMain->uwWidth - 5) {
