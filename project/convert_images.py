@@ -74,10 +74,8 @@ def main(data, out, bindir):
     w_h_re = re.compile(r"PNG image data, (\d+) x (\d+),")
     transparency = '"#BBBBBB"'
 
-    if not data.endswith(os.path.sep):
-        data += os.path.sep
-    if not out.endswith(os.path.sep):
-        out += os.path.sep
+    data = os.path.join(data, ".")
+    out = os.path.join(out, ".")
 
     for name,set in DATA.items():
         inputfiles = []
@@ -85,7 +83,7 @@ def main(data, out, bindir):
         bmfiles = []
         for pattern in set:
             for i in glob.glob(os.path.join(data, pattern)):
-                output = i.replace(data, out)
+                output = i.replace(data, os.path.join(out, name.lower()))
                 inputfiles.append(i)
                 pngfiles.append(output)
                 os.makedirs(os.path.dirname(output), exist_ok=True)
