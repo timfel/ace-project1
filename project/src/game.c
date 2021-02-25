@@ -62,7 +62,7 @@ void gameGsCreate(void) {
 
     logWrite("Create map\n");
 
-    s_pGoldMineBitmap = bitmapCreateFromFile("resources/graphics/tilesets/forest/neutral/buildings/gold_mine.bm", 0);
+    s_pGoldMineBitmap = bitmapCreateFromFile("resources/forest_tileset/graphics/tilesets/forest/neutral/buildings/gold_mine.bm", 0);
 
     // create map area
     paletteLoad("resources/forest_tileset.plt", s_pMapPalette, 32);
@@ -76,7 +76,7 @@ void gameGsCreate(void) {
                             TAG_VPORT_BPP, 5,
                             TAG_VPORT_HEIGHT, MAP_HEIGHT,
                             TAG_END);    
-    s_pMapBitmap = bitmapCreateFromFile("resources/graphics/tilesets/forest/terrain.bm", 0);
+    s_pMapBitmap = bitmapCreateFromFile("resources/forest_tileset/graphics/tilesets/forest/terrain.bm", 0);
     logWrite("Create tilebuffer\n");
     s_pMapBuffer = tileBufferCreate(0,
                                     TAG_TILEBUFFER_VPORT, s_pVpMain,
@@ -92,7 +92,7 @@ void gameGsCreate(void) {
     cameraSetCoord(s_pMainCamera, 0, 0);
 
     logWrite("file tile data\n");
-    tFile *map = fileOpen("resources/human01.map", "r");
+    tFile *map = fileOpen("resources/maps/orc12", "r");
     for (int x = 0; x < MAP_SIZE; x++) {
         fileRead(map, s_pMapBuffer->pTileData[x], MAP_SIZE);
     }
@@ -119,7 +119,7 @@ void gameGsCreate(void) {
                                         TAG_SIMPLEBUFFER_VPORT, s_pVpPanel,
                                         TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
                                         TAG_END);
-    bitmapLoadFromFile(s_pPanelBuffer->pFront, "resources/graphics/ui/human/panel_2.bm", 48, 0);
+    bitmapLoadFromFile(s_pPanelBuffer->pFront, "resources/human_panel/graphics/ui/human/panel_2.bm", 48, 0);
 
     // finish up
     logWrite("load view\n");
