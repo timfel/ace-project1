@@ -24,6 +24,8 @@
 #define TILE_SIZE 1 << TILE_SHIFT
 #define MAP_SIZE 64
 
+#define BPP 5
+#define COLORS 1 << BPP
 
 static tView *s_pView; // View containing all the viewports
 static tVPort *s_pVpPanel; // Viewport for panel
@@ -38,8 +40,8 @@ static tBitMap *s_pGoldMineMask;
 static tBobNew s_GoldMineBob;
 
 // palette switching
-static uint16_t s_pMapPalette[32];
-static uint16_t s_pPanelPalette[32];
+static uint16_t s_pMapPalette[COLORS];
+static uint16_t s_pPanelPalette[COLORS];
 static tCopBlock *s_pPaletteBlocks[2];
 
 #define MAP_HEIGHT 200
@@ -69,18 +71,18 @@ void gameGsCreate(void) {
     s_pGoldMineMask = bitmapCreateFromFile("resources/forest_tileset/graphics/tilesets/forest/neutral/buildings/gold_mine_mask.bm", 0);
 
     // create map area
-    paletteLoad("resources/forest_tileset.plt", s_pMapPalette, 32);
-    s_pPaletteBlocks[0] = copBlockCreate(s_pView->pCopList, 32, 0, 0);
-    for (uint8_t i = 0; i < 32; i++) {
+    paletteLoad("resources/forest_tileset.plt", s_pMapPalette, COLORS);
+    s_pPaletteBlocks[0] = copBlockCreate(s_pView->pCopList, COLORS, 0, 0);
+    for (uint8_t i = 0; i < COLORS; i++) {
         copMove(s_pView->pCopList, s_pPaletteBlocks[0], &g_pCustom->color[i], s_pMapPalette[i]);
     }
 
     s_pVpMain = vPortCreate(0,
                             TAG_VPORT_VIEW, s_pView,
-                            TAG_VPORT_BPP, 5,
+                            TAG_VPORT_BPP, BPP,
                             TAG_VPORT_HEIGHT, MAP_HEIGHT,
                             TAG_END);
-    for (uint8_t i = 0; i < 32; i++) {
+    for (uint8_t i = 0; i < COLORS; i++) {
         s_pVpMain->pPalette[i] = s_pMapPalette[i];
     }
     s_pMapBitmap = bitmapCreateFromFile("resources/forest_tileset/graphics/tilesets/forest/terrain.bm", 0);
@@ -113,15 +115,15 @@ void gameGsCreate(void) {
     tileBufferRedrawAll(s_pMapBuffer);
 
     // create panel area
-    paletteLoad("resources/human_panel.plt", s_pPanelPalette, 32);
-    s_pPaletteBlocks[1] = copBlockCreate(s_pView->pCopList, 32, 0, MAP_HEIGHT + 45);
-    for (uint8_t i = 0; i < 32; i++) {
+    paletteLoad("resources/human_panel.plt", s_pPanelPalette, COLORS);
+    s_pPaletteBlocks[1] = copBlockCreate(s_pView->pCopList, COLORS, 0, MAP_HEIGHT + 45);
+    for (uint8_t i = 0; i < COLORS; i++) {
         copMove(s_pView->pCopList, s_pPaletteBlocks[1], &g_pCustom->color[i], s_pPanelPalette[i]);
     }
     
     s_pVpPanel = vPortCreate(0,
                              TAG_VPORT_VIEW, s_pView,
-                             TAG_VPORT_BPP, 5,
+                             TAG_VPORT_BPP, BPP,
                              // TAG_VPORT_OFFSET_TOP, 1,
                              TAG_VPORT_HEIGHT, PANEL_HEIGHT,
                              TAG_END);
@@ -146,16 +148,16 @@ void gameGsLoop(void) {
     case 0:
         // This will loop every frame
         if (keyCheck(KEY_W)) {
-            cameraMoveBy(s_pMainCamera, 0, -10);
+            cameraMoveBy(s_pMainCamera, 0, -1);
         }
         if (keyCheck(KEY_S)) {
-            cameraMoveBy(s_pMainCamera, 0, 10);
+            cameraMoveBy(s_pMainCamera, 0, 1);
         }
         if (keyCheck(KEY_A)) {
-            cameraMoveBy(s_pMainCamera, -10, 0);
+            cameraMoveBy(s_pMainCamera, -1, 0);
         }
         if (keyCheck(KEY_D)) {
-            cameraMoveBy(s_pMainCamera, 10, 0);
+            cameraMoveBy(s_pMainCamera, 1, 0);
         }
         if (keyCheck(KEY_ESCAPE)) {
             gameExit();

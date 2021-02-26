@@ -91,7 +91,7 @@ def main(data, out, bindir):
 
         inargs = " -i ".join(inputfiles)
         outargs = " -o ".join(pngfiles)
-        system(f"{rgb2amiga} -f png-gpl -s ! -i {inargs} -o {outargs}")
+        system(f"{rgb2amiga} -c 32 -f png-gpl -s ! -i {inargs} -o {outargs}")
         palette = os.path.join(out, f"{name.lower()}.plt")
         system(f"{palette_conv} {pngfiles[0]}.gpl {palette}")
         for bmfile,pngfile in zip(bmfiles, pngfiles):
