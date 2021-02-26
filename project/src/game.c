@@ -1,4 +1,5 @@
 #include "game.h"
+#include "bob_new.h"
 #include <ace/managers/copper.h>
 #include <ace/managers/log.h>
 #include <ace/managers/mouse.h>
@@ -34,6 +35,7 @@ static tBitMap *s_pMapBitmap;
 
 static tBitMap *s_pGoldMineBitmap;
 static tBitMap *s_pGoldMineMask;
+static tBobNew s_GoldMineBob;
 
 // palette switching
 static uint16_t s_pMapPalette[32];
@@ -57,7 +59,7 @@ void gameGsCreate(void) {
 
     logWrite("Create view\n");
     s_pView = viewCreate(0,
-                         // TAG_VIEW_GLOBAL_CLUT, 1,
+                         TAG_VIEW_GLOBAL_CLUT, 1,
                          TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_BLOCK,
                          TAG_DONE);
 
@@ -77,7 +79,10 @@ void gameGsCreate(void) {
                             TAG_VPORT_VIEW, s_pView,
                             TAG_VPORT_BPP, 5,
                             TAG_VPORT_HEIGHT, MAP_HEIGHT,
-                            TAG_END);    
+                            TAG_END);
+    for (uint8_t i = 0; i < 32; i++) {
+        s_pVpMain->pPalette[i] = s_pMapPalette[i];
+    }
     s_pMapBitmap = bitmapCreateFromFile("resources/forest_tileset/graphics/tilesets/forest/terrain.bm", 0);
     logWrite("Create tilebuffer\n");
     s_pMapBuffer = tileBufferCreate(0,
@@ -92,6 +97,10 @@ void gameGsCreate(void) {
     s_pMainCamera = s_pMapBuffer->pCamera;
     logWrite("set camera coords\n");
     cameraSetCoord(s_pMainCamera, 0, 0);
+
+    bobNewManagerCreate(s_pMapBuffer->pScroll->pFront, s_pMapBuffer->pScroll->pBack, s_pMapBuffer->pScroll->uwBmAvailHeight);
+    bobNewInit(&s_GoldMineBob, 64, 64, 0, s_pGoldMineBitmap, s_pGoldMineMask, 80, 80);
+    bobNewReallocateBgBuffers();
 
     logWrite("file tile data\n");
     tFile *map = fileOpen("resources/maps/orc12", "r");
@@ -130,49 +139,59 @@ void gameGsCreate(void) {
     systemUnuse();
 }
 
+static uint16_t GameCycle = 0;
+
 void gameGsLoop(void) {
-    // This will loop every frame
-    if (keyCheck(KEY_W)) {
-        cameraMoveBy(s_pMainCamera, 0, -1);
-    }
-    if (keyCheck(KEY_S)) {
-        cameraMoveBy(s_pMainCamera, 0, 1);
-    }
-    if (keyCheck(KEY_A)) {
-        cameraMoveBy(s_pMainCamera, -1, 0);
-    }
-    if (keyCheck(KEY_D)) {
-        cameraMoveBy(s_pMainCamera, 1, 0);
-    }
-    if (keyCheck(KEY_ESCAPE)) {
-        gameExit();
-    }
-    if (keyCheck(KEY_C)) {
-        copDumpBlocks();
+    switch (GameCycle % 1) {
+    case 0:
+        // This will loop every frame
+        if (keyCheck(KEY_W)) {
+            cameraMoveBy(s_pMainCamera, 0, -10);
+        }
+        if (keyCheck(KEY_S)) {
+            cameraMoveBy(s_pMainCamera, 0, 10);
+        }
+        if (keyCheck(KEY_A)) {
+            cameraMoveBy(s_pMainCamera, -10, 0);
+        }
+        if (keyCheck(KEY_D)) {
+            cameraMoveBy(s_pMainCamera, 10, 0);
+        }
+        if (keyCheck(KEY_ESCAPE)) {
+            gameExit();
+        }
+        if (keyCheck(KEY_C)) {
+            copDumpBlocks();
+        }
+        if (mouseGetX(MOUSE_PORT_1) > s_pVpMain->uwWidth - 5) {
+            cameraMoveBy(s_pMainCamera, 1, 0);
+        } else if (mouseGetX(MOUSE_PORT_1) < 5) {
+            cameraMoveBy(s_pMainCamera, -1, 0);
+        } else if (mouseGetY(MOUSE_PORT_1) < 5) {
+            cameraMoveBy(s_pMainCamera, 0, -1);
+        } else if (mouseGetY(MOUSE_PORT_1) > s_pVpMain->uwHeight - 5) {
+            cameraMoveBy(s_pMainCamera, 0, 1);
+        }
     }
 
-    if (keyCheck(KEY_U)) {
-        blitUnsafeCopyAligned(s_pGoldMineBitmap, 0, 0, s_pMapBuffer->pScroll->pBack, 128, 80, 64, 64);
+    bobNewBegin(s_pMapBuffer->pScroll->pBack);
+    if (tileBufferIsTileOnBuffer(s_pMapBuffer, 80 / 16, 80 / 16)) {
+        bobNewPush(&s_GoldMineBob);
     }
-
-    if (mouseGetX(MOUSE_PORT_1) > s_pVpMain->uwWidth - 5) {
-        cameraMoveBy(s_pMainCamera, 1, 0);
-    } else if (mouseGetX(MOUSE_PORT_1) < 5) {
-        cameraMoveBy(s_pMainCamera, -1, 0);
-    } else if (mouseGetY(MOUSE_PORT_1) < 5) {
-        cameraMoveBy(s_pMainCamera, 0, -1);
-    } else if (mouseGetY(MOUSE_PORT_1) > s_pVpMain->uwHeight - 5) {
-        cameraMoveBy(s_pMainCamera, 0, 1);
-    }
+    bobNewPushingDone();
+    bobNewProcessNext();
+    bobNewEnd();
 
     viewProcessManagers(s_pView);
     copProcessBlocks();
     vPortWaitForEnd(s_pVpPanel);
+    GameCycle++;
 }
 
 void gameGsDestroy(void) {
     systemUse();
 
     // This will also destroy all associated viewports and viewport managers
+    bobNewManagerDestroy();
     viewDestroy(s_pView);
 }
