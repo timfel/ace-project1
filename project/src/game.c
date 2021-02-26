@@ -33,6 +33,7 @@ static tCameraManager *s_pMainCamera;
 static tBitMap *s_pMapBitmap;
 
 static tBitMap *s_pGoldMineBitmap;
+static tBitMap *s_pGoldMineMask;
 
 // palette switching
 static uint16_t s_pMapPalette[32];
@@ -63,6 +64,7 @@ void gameGsCreate(void) {
     logWrite("Create map\n");
 
     s_pGoldMineBitmap = bitmapCreateFromFile("resources/forest_tileset/graphics/tilesets/forest/neutral/buildings/gold_mine.bm", 0);
+    s_pGoldMineMask = bitmapCreateFromFile("resources/forest_tileset/graphics/tilesets/forest/neutral/buildings/gold_mine_mask.bm", 0);
 
     // create map area
     paletteLoad("resources/forest_tileset.plt", s_pMapPalette, 32);

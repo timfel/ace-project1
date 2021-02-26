@@ -72,7 +72,7 @@ def main(data, out, bindir):
     tileset_conv = os.path.join(bindir, 'bin', 'tileset_conv')
     palette_conv = os.path.join(bindir, 'bin', 'palette_conv')
     w_h_re = re.compile(r"PNG image data, (\d+) x (\d+),")
-    transparency = '"#BBBBBB"'
+    transparency = r'\#BBBBBB'
 
     data = os.path.join(data, ".")
     out = os.path.join(out, ".")
@@ -109,7 +109,7 @@ def main(data, out, bindir):
                     add_right = math.ceil((16 - w) / 2)
                     system(f"convert {pngfile}.png -gravity East -background {transparency} -splice {add_left}x0 +repage {pngfile}.png")
                     system(f"convert {pngfile}.png -gravity West -background {transparency} -splice {add_right}x0 +repage {pngfile}.png")
-            system(f"{bitmap_conv} {palette} {pngfile}.png -o {bmfile}")
+            system(f"{bitmap_conv} {palette} {pngfile}.png -o {bmfile} -mc {transparency}")
         if name.endswith("_TILESET"):
             system(f"{tileset_conv} {pngfiles[0]}.png {TILE_SIZE} {bmfiles[0]} -plt {palette}")
 
