@@ -363,7 +363,7 @@ def main(data, out):
         map = archive.get_map(117 + idx)
         map.name = f"{m}{lvl}"
         print(map.name, map.get_briefing())
-        with open(os.path.join(mapdir, map.name), "wb") as f:
+        with open(f"{os.path.join(mapdir, map.name)}.map", "wb") as f:
             map.write(f)
 
 

@@ -23,8 +23,24 @@ endif()
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DAMIGA -Wall -Wextra -fomit-frame-pointer")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DACE_DEBUG")
-file(GLOB_RECURSE SOURCES src/*.c)
-file(GLOB_RECURSE HEADERS src/*.h)
+file(GLOB_RECURSE SOURCES
+                  src/main.c
+                  src/game.c
+                  src/bob_new.c)
+file(GLOB_RECURSE HEADERS
+                  src/game.h
+                  src/bob_new.h)
+
+foreach(i RANGE 1 12 1)
+        list(APPEND MAPS resources/maps/human${i}.map)
+endforeach()
+foreach(i RANGE 1 12 1)
+        list(APPEND MAPS resources/maps/orc${i}.map)
+endforeach()
+file(GLOB_RECURSE RESOURCES
+                  resources/forest_tileset.plt
+                  resources/*.bm
+                  resources/*.plt)
 
 include_directories(
         ${PROJECT_SOURCE_DIR}/src
@@ -51,7 +67,7 @@ set(LIBS ${LIBS} ${ace_LIBRARY})
 
 # Linux/other UNIX get a lower-case binary name
 set(TARGET_NAME ${PROJECT_NAME_LOWER})
-add_executable(${TARGET_NAME} ${SOURCES} ${HEADERS})
+add_executable(${TARGET_NAME} ${SOURCES} ${HEADERS} ${RESOURCES} ${MAPS})
 target_link_libraries(${TARGET_NAME} ${LIBS})
 
 ## resources
@@ -59,9 +75,17 @@ if(NOT DEFINED WAR1GUS_DATA)
        message(FATAL_ERROR "Point WAR1GUS_DATA to the data directory of war1gus")
 endif()
 
-add_custom_command(TARGET "${TARGET_NAME}"
-                   POST_BUILD
+add_custom_command(OUTPUT ${RESOURCES}
                    COMMAND python3
                    ARGS convert_images.py --data ${WAR1GUS_DATA} --output resources --prefix ${TOOLCHAIN_PATH}
-                   COMMENT "Converting resources"
+                   COMMENT "Converting graphics"
+                   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                   VERBATIM)
+
+add_custom_command(OUTPUT ${MAPS}
+                   COMMAND python3
+                   ARGS convert_maps.py --data ${WAR1GUS_DATA} --output resources
+                   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                   COMMENT "Converting maps"
+                   SOURCES convert_maps.py
                    VERBATIM)

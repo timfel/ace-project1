@@ -94,6 +94,7 @@ void gameGsCreate(void) {
                                     TAG_TILEBUFFER_BOUND_TILE_Y, MAP_SIZE,
                                     TAG_TILEBUFFER_TILE_SHIFT, TILE_SHIFT,
                                     TAG_TILEBUFFER_TILESET, s_pMapBitmap,
+                                    TAG_TILEBUFFER_IS_DBLBUF, 0,
                                     TAG_TILEBUFFER_REDRAW_QUEUE_LENGTH, 9,
                                     TAG_END);
     s_pMainCamera = s_pMapBuffer->pCamera;
@@ -105,7 +106,7 @@ void gameGsCreate(void) {
     bobNewReallocateBgBuffers();
 
     logWrite("file tile data\n");
-    tFile *map = fileOpen("resources/maps/orc12", "r");
+    tFile *map = fileOpen("resources/maps/orc12.map", "r");
     for (int x = 0; x < MAP_SIZE; x++) {
         fileRead(map, s_pMapBuffer->pTileData[x], MAP_SIZE);
     }
